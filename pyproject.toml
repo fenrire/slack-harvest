@@ -1,0 +1,25 @@
+[project]
+name = "slack-harvest"
+version = "0.1.0"
+description = "Slack 워크스페이스 데이터를 로컬에 아카이빙하고 분석하는 도구"
+requires-python = ">=3.11"
+dependencies = [
+    "slack-sdk>=3.27",
+    "click>=8.1",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+    "tenacity>=8.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[project.scripts]
+harvest = "slack_harvest.cli:cli"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

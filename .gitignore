@@ -1,0 +1,10 @@
+.env
+data/
+export/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+%programdata%/
