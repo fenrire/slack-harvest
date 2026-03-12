@@ -67,14 +67,22 @@ class SlackChannel:
 
     @classmethod
     def from_api(cls, data: dict) -> SlackChannel:
+        # im(DM) 채널은 name 필드가 없음 → 상대방 user_id로 합성
+        if data.get("is_im"):
+            name = f"DM-{data.get('user', data['id'])}"
+            name_normalized = name.lower()
+        else:
+            name = data.get("name", "")
+            name_normalized = data.get("name_normalized")
+
         return cls(
             id=data["id"],
-            name=data.get("name", ""),
-            name_normalized=data.get("name_normalized"),
-            topic=data.get("topic", {}).get("value"),
-            purpose=data.get("purpose", {}).get("value"),
+            name=name,
+            name_normalized=name_normalized,
+            topic=data.get("topic", {}).get("value") if not data.get("is_im") else None,
+            purpose=data.get("purpose", {}).get("value") if not data.get("is_im") else None,
             is_archived=data.get("is_archived", False),
-            is_private=data.get("is_private", False),
+            is_private=data.get("is_private", False) or data.get("is_im", False) or data.get("is_mpim", False),
             is_general=data.get("is_general", False),
             creator_id=data.get("creator"),
             created=data.get("created"),

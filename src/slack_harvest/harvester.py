@@ -103,6 +103,7 @@ class SlackHarvester:
         channel_names: Optional[list[str]] = None,
         include_archived: bool = False,
         include_private: bool = False,
+        include_dm: bool = False,
     ) -> dict:
         """전체 동기화 실행"""
         stats = {"users": 0, "channels": 0, "messages": 0, "threads": 0}
@@ -124,6 +125,7 @@ class SlackHarvester:
             channels = self.sync_channels(
                 include_archived=include_archived,
                 include_private=include_private,
+                include_dm=include_dm,
             )
             stats["channels"] = len(channels)
             progress.update(task, completed=100, total=100)
@@ -167,11 +169,14 @@ class SlackHarvester:
         self,
         include_archived: bool = False,
         include_private: bool = False,
+        include_dm: bool = False,
     ) -> list[dict]:
         """모든 채널 동기화, 채널 목록 반환"""
         types = ["public_channel"]
         if include_private:
             types.append("private_channel")
+        if include_dm:
+            types.extend(["im", "mpim"])  # DM 및 그룹 DM (User Token 필요)
 
         all_channels: list[SlackChannel] = []
         for page in self._paginate(

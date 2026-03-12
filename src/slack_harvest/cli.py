@@ -46,7 +46,8 @@ def cli(ctx: click.Context, db_path: str, verbose: bool) -> None:
 @click.option("--full", is_flag=True, help="전체 재동기화 (증분 무시)")
 @click.option("-c", "--channel", multiple=True, help="특정 채널만 동기화")
 @click.option("--include-archived", is_flag=True, help="보관된 채널 포함")
-@click.option("--include-private", is_flag=True, help="비공개 채널 포함")
+@click.option("--include-private", is_flag=True, help="비공개 채널 포함 (User Token 필요)")
+@click.option("--include-dm", is_flag=True, help="DM/그룹DM 포함 (User Token 필요)")
 @click.pass_context
 def sync(
     ctx: click.Context,
@@ -54,6 +55,7 @@ def sync(
     channel: tuple[str, ...],
     include_archived: bool,
     include_private: bool,
+    include_dm: bool,
 ) -> None:
     """Slack에서 데이터 동기화"""
     from .harvester import SlackHarvester
@@ -65,7 +67,7 @@ def sync(
         sys.exit(1)
 
     db = _get_db(ctx)
-    harvester = SlackHarvester(config.slack_bot_token, db)
+    harvester = SlackHarvester(config.active_token, db)
 
     try:
         stats = harvester.sync_all(
@@ -73,6 +75,7 @@ def sync(
             channel_names=list(channel) if channel else None,
             include_archived=include_archived,
             include_private=include_private,
+            include_dm=include_dm,
         )
 
         console.print()
