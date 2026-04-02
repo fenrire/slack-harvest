@@ -1,12 +1,24 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "slack-harvest"
-version = "0.2.0"
-description = "슬랙 메시지를 노션에 채널/주제별로 정리하는 도구"
+version = "1.0.0"
+description = "슬랙 채널/스레드를 로컬에 아카이빙하는 CLI 도구"
 requires-python = ">=3.10"
 dependencies = [
     "httpx>=0.24.0",
     "python-dotenv>=1.0.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
 [project.scripts]
-slack-harvest = "main:main"
+slack-harvest = "slack_harvest.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
