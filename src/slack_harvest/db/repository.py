@@ -267,6 +267,21 @@ class Repository:
         ).fetchone()
         return row["cnt"]
 
+    # ── workspace_meta ─────────────────────────────────────
+
+    def set_meta(self, key: str, value: str) -> None:
+        self.conn.execute(
+            "INSERT OR REPLACE INTO workspace_meta (key, value) VALUES (?, ?)",
+            (key, value),
+        )
+        self.conn.commit()
+
+    def get_meta(self, key: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT value FROM workspace_meta WHERE key = ?", (key,)
+        ).fetchone()
+        return row["value"] if row else None
+
     # ── thread_summaries ─────────────────────────────────────
 
     def get_unsummarized_threads(self, channel_id: str | None = None) -> list[dict]:

@@ -38,6 +38,12 @@ def _setup() -> tuple[Config, SlackClient, Repository]:
 
     conn = init_db(config.db_path)
     repo = Repository(conn)
+
+    # workspace URL 저장 (export 시 Slack permalink 생성에 사용)
+    workspace_url = auth.get("url", "")
+    if workspace_url:
+        repo.set_meta("workspace_url", workspace_url.rstrip("/"))
+
     return config, client, repo
 
 

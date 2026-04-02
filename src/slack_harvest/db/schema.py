@@ -78,6 +78,11 @@ CREATE INDEX IF NOT EXISTS idx_messages_thread
 CREATE INDEX IF NOT EXISTS idx_files_channel_msg
     ON files(channel_id, message_ts);
 
+CREATE TABLE IF NOT EXISTS workspace_meta (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS thread_summaries (
     channel_id TEXT NOT NULL,
     thread_ts  TEXT NOT NULL,
