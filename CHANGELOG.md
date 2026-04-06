@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-04-06
+
+### Windows 파일명 제어문자 버그 수정
+- `_thread_slug()` / `_make_slug()`: Slack 메시지에 포함된 제어문자(`\x00-\x1f`, `\x7f`)를 파일명 생성 전에 제거
+- Windows에서 `\x08`(backspace) 등 제어문자가 파일명에 포함되면 `OSError: [Errno 22] Invalid argument` 발생하던 문제 해결
+
+### 대규모 배치 수집 (52개 채널, --since 2026-03-01)
+- ly-*, nc-*, fb-* 계열 52개 채널 3월 이후 메시지 일괄 수집 완료
+- SQLite WAL 모드 활용: fetch 실행 중 export 병렬 실행 가능 확인
+
+### Haiku 기반 스레드 요약 9,443개 생성
+- `reply_count >= 5` 필터링 (9,648개) → 49배치(배치당 200개)로 분할
+- Claude Haiku subagent 49개 병렬 실행으로 9,443개 요약 생성·import
+- 요약 품질: 15-25자 한국어, 인사말/멘션 제거, 파일명 안전 형식
+
 ## 2026-04-02
 
 ### LLM 기반 스레드 요약 캐시

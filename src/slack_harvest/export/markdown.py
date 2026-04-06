@@ -310,6 +310,8 @@ def _thread_slug(text: str) -> str:
     summary = _truncate(text, 20)
     # HTML 엔티티 정리
     summary = summary.replace("&lt;", "").replace("&gt;", "").replace("&amp;", "&")
+    # 제어문자 제거 (Windows 파일명 불가 문자: \x00-\x1f)
+    summary = re.sub(r'[\x00-\x1f\x7f]', '', summary)
     slug = re.sub(r'[\\/:*?"<>|\n\r`\[\]]', '', summary)
     slug = slug.strip(". ")
     return slug or "thread"
@@ -335,6 +337,7 @@ def _thread_filename(
 def _make_slug(text: str) -> str:
     """이미 요약된 텍스트를 파일명용 slug로 변환."""
     text = text.replace("&lt;", "").replace("&gt;", "").replace("&amp;", "&")
+    text = re.sub(r'[\x00-\x1f\x7f]', '', text)
     slug = re.sub(r'[\\/:*?"<>|\n\r`\[\]]', '', text)
     slug = slug.strip(". ")
     return slug or "thread"

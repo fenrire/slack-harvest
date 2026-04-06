@@ -18,6 +18,11 @@ from .db.schema import init_db
 from .db.repository import Repository
 from .slack.client import SlackClient
 
+# Windows cp949 터미널에서 한글 깨짐 방지: stdout을 UTF-8로 재설정
+if sys.stdout.encoding and sys.stdout.encoding.lower() in ("cp949", "cp1252", "mbcs"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 console = Console()
 log = logging.getLogger("slack_harvest")
 
@@ -272,7 +277,7 @@ def channels(private: bool):
     for ch in sorted(ch_list, key=lambda c: c.get("name", "")):
         name = ch.get("name", "")
         members = str(ch.get("num_members", 0))
-        private_mark = "🔒" if ch.get("is_private") else ""
+        private_mark = "Y" if ch.get("is_private") else ""
         topic = (ch.get("topic") or {}).get("value", "")
         if len(topic) > 50:
             topic = topic[:47] + "..."
@@ -438,7 +443,7 @@ def list_cmd():
 
     for ch in channels:
         msg_count = repo.get_message_count(ch["id"])
-        private = "🔒" if ch["is_private"] else ""
+        private = "Y" if ch["is_private"] else ""
         latest = ch.get("latest_ts", "-")
         table.add_row(f"#{ch['name']}", str(msg_count), private, latest or "-")
 
