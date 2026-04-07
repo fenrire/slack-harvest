@@ -2,6 +2,13 @@
 
 ## 2026-04-07
 
+### Gemini API 직접 요약 (`summarize --llm`)
+- `GEMINI_API_KEY` 환경변수 지원 추가
+- `slack-harvest summarize --llm` 옵션: Gemini 2.5 Flash로 직접 요약 (서브에이전트 우회 불필요)
+- `--min-replies N` 옵션: 답글 N개 이상만 대상 (기본 5)
+- rate limit 14 RPM 자동 조절, 실패 시 경고 후 계속 진행
+- 무료 티어 기준 일 1,500건 처리 가능
+
 ### 스레드 자동 아카이브 분류 (export 단계)
 - `threads/` 폴더를 `threads/` (active) + `threads/archive/` (stale)로 분리
 - 마지막 활동 기준 14일 초과 스레드는 `threads/archive/`에 생성 (`ARCHIVE_DAYS = 14`)

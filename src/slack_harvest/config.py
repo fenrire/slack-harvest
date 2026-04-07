@@ -15,6 +15,7 @@ class Config:
     workspace: str = ""  # auth.test에서 자동 채움
     output_dir: Path = field(default_factory=lambda: Path.home() / "Documents" / "SlackArchive")
     nexus_outbox: Path | None = None
+    gemini_api_key: str = ""
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -28,6 +29,7 @@ class Config:
             slack_token=token,
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
+            gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
     @property

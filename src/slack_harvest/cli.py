@@ -353,7 +353,9 @@ def export(channel: str | None, nexus: bool):
 @click.option("--channel", "-c", help="특정 채널만 대상")
 @click.option("--export", "export_path", type=click.Path(), help="미요약 스레드를 JSON으로 출력")
 @click.option("--import", "import_path", type=click.Path(exists=True), help="요약 JSON을 DB에 저장")
-def summarize(channel: str | None, export_path: str | None, import_path: str | None):
+@click.option("--llm", is_flag=True, help="Gemini API로 직접 요약 (GEMINI_API_KEY 필요)")
+@click.option("--min-replies", default=5, show_default=True, help="최소 답글 수 필터 (--llm 전용)")
+def summarize(channel: str | None, export_path: str | None, import_path: str | None, llm: bool, min_replies: int):
     """스레드 요약을 관리합니다 (LLM 요약 캐시)."""
     config, repo = _setup_db_only()
 
@@ -379,6 +381,37 @@ def summarize(channel: str | None, export_path: str | None, import_path: str | N
                 )
                 count += 1
         console.print(f"[green]요약 {count}개 저장 완료![/green]")
+        return
+
+    if llm:
+        from .summarize.gemini import GeminiSummarizer
+        if not config.gemini_api_key:
+            console.print("[red]GEMINI_API_KEY가 설정되지 않았습니다.[/red]")
+            return
+        pending = repo.get_unsummarized_threads(channel_id)
+        targets = [t for t in pending if (t["reply_count"] or 0) >= min_replies]
+        console.print(f"대상: [bold]{len(targets)}[/bold]개 (답글 {min_replies}개 이상)")
+        if not targets:
+            console.print("[green]요약할 스레드가 없습니다.[/green]")
+            return
+
+        summarizer = GeminiSummarizer(config.gemini_api_key)
+        ok = fail = 0
+        with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
+            task = progress.add_task("요약 중...", total=len(targets))
+            for t in targets:
+                replies = repo.get_thread_messages(t["channel_id"], t["thread_ts"])
+                reply_texts = [r.get("text", "") for r in replies if r.get("text")]
+                summary = summarizer.summarize(t["text"] or "", reply_texts)
+                if summary:
+                    with repo.conn:
+                        repo.upsert_thread_summary(t["channel_id"], t["thread_ts"], summary, "gemini")
+                    ok += 1
+                else:
+                    fail += 1
+                progress.advance(task)
+                progress.update(task, description=f"요약 중... ({ok}완료 {fail}실패)")
+        console.print(f"[green]완료: {ok}개 저장, {fail}개 실패[/green]")
         return
 
     pending = repo.get_unsummarized_threads(channel_id)
