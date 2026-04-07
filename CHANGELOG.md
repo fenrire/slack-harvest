@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-07
+
+### 스레드 자동 아카이브 분류 (export 단계)
+- `threads/` 폴더를 `threads/` (active) + `threads/archive/` (stale)로 분리
+- 마지막 활동 기준 14일 초과 스레드는 `threads/archive/`에 생성 (`ARCHIVE_DAYS = 14`)
+- DB 변경 없이 export 로직만 수정 → 재생성 시 항상 최신 상태 반영
+- 날짜별 파일의 스레드 링크도 archive/ 경로로 자동 연결
+- 스레드 frontmatter에 `archived: true/false` 필드 추가
+
 ## 2026-04-06
 
 ### Windows 파일명 제어문자 버그 수정

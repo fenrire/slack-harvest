@@ -8,6 +8,8 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
+ARCHIVE_DAYS = 14  # 마지막 활동 후 N일 경과 시 archive/ 서브폴더로 분류
+
 from ..db.repository import Repository
 from .linker import Linker
 
@@ -39,19 +41,31 @@ class MarkdownExporter:
 
         # 스레드 파일명 매핑 먼저 구축 (날짜별 파일에서 스레드 링크 참조용)
         thread_parents = self.repo.get_thread_parents(ch["id"])
-        self._thread_filenames: dict[str, str] = {}  # ts → filename
+        self._thread_filenames: dict[str, str] = {}  # ts → relative fname (archive/ 포함 가능)
         if thread_parents:
             threads_dir = ch_dir / "threads"
+            archive_dir = threads_dir / "archive"
             # 기존 스레드 파일 정리 (파일명 변경 시 중복 방지)
             if threads_dir.exists():
                 for old_file in threads_dir.glob("*.md"):
                     old_file.unlink()
+                if archive_dir.exists():
+                    for old_file in archive_dir.glob("*.md"):
+                        old_file.unlink()
             threads_dir.mkdir(exist_ok=True)
+            archive_dir.mkdir(exist_ok=True)
+
+            now_ts = datetime.now().timestamp()
             for parent in thread_parents:
                 replies = self.repo.get_thread_messages(ch["id"], parent["ts"])
                 summary = self._get_summary(parent)
                 fname = _thread_filename(parent, replies, summary_override=summary)
-                self._thread_filenames[parent["ts"]] = fname
+                # 마지막 활동 기준 ARCHIVE_DAYS 초과 시 archive/ 서브폴더
+                last_ts = max(float(r["ts"]) for r in replies) if replies else float(parent["ts"])
+                if (now_ts - last_ts) / 86400 >= ARCHIVE_DAYS:
+                    self._thread_filenames[parent["ts"]] = f"archive/{fname}"
+                else:
+                    self._thread_filenames[parent["ts"]] = fname
 
         # 날짜별 MD
         dates = self.repo.get_dates_for_channel(ch["id"])
@@ -67,8 +81,8 @@ class MarkdownExporter:
         if thread_parents:
             for parent in thread_parents:
                 replies = self.repo.get_thread_messages(ch["id"], parent["ts"])
-                fname = self._thread_filenames[parent["ts"]]
-                path = threads_dir / fname
+                rel_fname = self._thread_filenames[parent["ts"]]
+                path = threads_dir / rel_fname  # archive/ prefix 포함 가능
                 self._write_thread(ch, parent, replies, path)
 
     # ── 내부 헬퍼 ─────────────────────────────────────────────
@@ -123,12 +137,14 @@ class MarkdownExporter:
     ) -> None:
         ts = datetime.fromtimestamp(float(parent["ts"]))
         summary = self._get_summary(parent)
+        archived = "archive" in path.parts
         lines = [
             "---",
             f'channel: "{ch["name"]}"',
             f'thread_ts: "{parent["ts"]}"',
             f"date: {ts.strftime('%Y-%m-%d')}",
             f"replies: {len(replies)}",
+            f"archived: {str(archived).lower()}",
             "source: slack-harvest",
             "---",
             "",
