@@ -16,6 +16,7 @@ class Config:
     output_dir: Path = field(default_factory=lambda: Path.home() / "Documents" / "SlackArchive")
     nexus_outbox: Path | None = None
     gemini_api_key: str = ""
+    log_file: Path | None = None
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -25,11 +26,13 @@ class Config:
             str(Path.home() / "Documents" / "SlackArchive"),
         ))
         nexus_raw = os.getenv("NEXUS_OUTBOX_DIR")
+        log_raw = os.getenv("HARVEST_LOG_FILE")
         return cls(
             slack_token=token,
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
             gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
+            log_file=Path(log_raw).expanduser() if log_raw else None,
         )
 
     @property

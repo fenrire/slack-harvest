@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-08
+
+### 배치 작업 로그 파일 (`HARVEST_LOG_FILE`)
+- `HARVEST_LOG_FILE` 환경변수로 로그 파일 경로 지정 시 각 커맨드 완료 후 한 줄 append
+- fetch: 채널 수 / 메시지 수 / 스레드 수 / API 호출 횟수 기록
+- summarize --llm: 저장 건수 / 실패 건수 / 파라미터 기록
+- export: Markdown 완료 / 다운로드 파일 수 기록
+- 미설정 시 로그 비활성 (기존 동작 유지)
+
 ## 2026-04-07
 
 ### Gemini API 직접 요약 (`summarize --llm`)

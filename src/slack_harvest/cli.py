@@ -27,6 +27,16 @@ console = Console()
 log = logging.getLogger("slack_harvest")
 
 
+def _append_log(config: Config, line: str) -> None:
+    """HARVEST_LOG_FILE이 설정된 경우 타임스탬프와 함께 한 줄 append."""
+    if not config.log_file:
+        return
+    config.log_file.parent.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    with config.log_file.open("a", encoding="utf-8") as f:
+        f.write(f"{ts} {line}\n")
+
+
 def _setup() -> tuple[Config, SlackClient, Repository]:
     """공통 초기화: Config → auth_test → DB."""
     config = Config.from_env()
@@ -114,6 +124,8 @@ def fetch(
     # 채널 목록 동기화
     _sync_channels(client, repo)
 
+    total_msgs = total_threads = 0
+
     if thread:
         # 단일 스레드 수집
         parsed = SlackClient.parse_thread_url(thread)
@@ -137,8 +149,10 @@ def fetch(
                 oldest = _days_ago_ts(refresh_days)
             else:
                 oldest = repo.get_latest_ts(ch["id"])
-            _fetch_channel(client, repo, ch["id"], ch["name"], oldest,
-                           detect_edits=(refresh_days > 0))
+            m, t = _fetch_channel(client, repo, ch["id"], ch["name"], oldest,
+                                   detect_edits=(refresh_days > 0))
+            total_msgs += m
+            total_threads += t
     else:
         console.print("[yellow]--channel 또는 --thread 옵션을 지정하세요.[/yellow]")
         console.print("예: slack-harvest fetch -c general")
@@ -148,6 +162,9 @@ def fetch(
     _backfill_missing_users(client, repo)
 
     console.print(f"\n[green]수집 완료![/green] (API 호출 {client.api_calls}회)")
+    _append_log(config,
+        f"[fetch] 채널 {len(channel)}개 / 메시지 {total_msgs}개 / "
+        f"스레드 {total_threads}개 / API {client.api_calls}회")
 
 
 def _backfill_missing_users(client: SlackClient, repo: Repository) -> None:
@@ -195,7 +212,8 @@ def _fetch_channel(
     channel_name: str,
     oldest: str | None,
     detect_edits: bool = False,
-) -> None:
+) -> tuple[int, int]:
+    """채널 메시지를 수집하고 (메시지 수, 스레드 수) 반환."""
     repo.set_sync_status(channel_id, "syncing")
     console.print(f"\n[bold]#{channel_name}[/bold] 메시지 수집 중...")
 
@@ -203,7 +221,7 @@ def _fetch_channel(
     if not messages:
         console.print("  새 메시지 없음")
         repo.set_sync_status(channel_id, "done")
-        return
+        return 0, 0
 
     # 수정 감지: upsert 전에 edited_ts 변경분 카운트
     edited_count = 0
@@ -246,6 +264,7 @@ def _fetch_channel(
     max_ts = max(m["ts"] for m in messages)
     repo.update_latest_ts(channel_id, max_ts)
     repo.set_sync_status(channel_id, "done")
+    return len(messages), len(thread_parents)
 
 
 def _fetch_thread(
@@ -335,6 +354,8 @@ def export(channel: str | None, nexus: bool):
     if count:
         console.print(f"  파일 {count}개 다운로드 완료")
 
+    _append_log(config, f"[export] Markdown 완료 / 파일 {count}개 다운로드")
+
     # NexusEvent JSONL
     if nexus and config.nexus_outbox:
         from .export.nexus import NexusExporter
@@ -412,6 +433,7 @@ def summarize(channel: str | None, export_path: str | None, import_path: str | N
                 progress.advance(task)
                 progress.update(task, description=f"요약 중... ({ok}완료 {fail}실패)")
         console.print(f"[green]완료: {ok}개 저장, {fail}개 실패[/green]")
+        _append_log(config, f"[summarize] {ok}개 저장 {fail}개 실패 (gemini, min_replies={min_replies})")
         return
 
     pending = repo.get_unsummarized_threads(channel_id)
