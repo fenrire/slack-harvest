@@ -103,6 +103,7 @@ def main(verbose: bool):
 
 @main.command()
 @click.option("--channel", "-c", multiple=True, help="채널 이름 또는 ID (여러 개 가능)")
+@click.option("--all", "fetch_all", is_flag=True, help="DB에 등록된 모든 채널 수집")
 @click.option("--thread", "-t", help="스레드 URL")
 @click.option("--since", help="시작 날짜 (YYYY-MM-DD) 또는 ts")
 @click.option("--full", is_flag=True, help="전체 히스토리 수집 (증분 무시)")
@@ -110,6 +111,7 @@ def main(verbose: bool):
               help="최근 N일 메시지를 재수집하여 수정 감지 (기본: 0=비활성)")
 def fetch(
     channel: tuple[str, ...],
+    fetch_all: bool,
     thread: str | None,
     since: str | None,
     full: bool,
@@ -123,6 +125,13 @@ def fetch(
 
     # 채널 목록 동기화
     _sync_channels(client, repo)
+
+    # --all: DB에 등록된 모든 채널로 확장
+    if fetch_all:
+        channel = tuple(ch["name"] for ch in repo.list_channels())
+        if not channel:
+            console.print("[yellow]수집된 채널이 없습니다.[/yellow]")
+            return
 
     total_msgs = total_threads = 0
 

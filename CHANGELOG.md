@@ -2,6 +2,11 @@
 
 ## 2026-04-08
 
+### 일일 배치 자동화 (Windows 작업 스케줄러)
+- `slack-harvest fetch --all` 플래그 추가: DB에 등록된 모든 채널을 한 번에 수집
+- `scripts/batch.bat`: fetch --all → summarize --llm → export 순서로 실행하는 배치 스크립트
+- Windows 작업 스케줄러 `MyTasks\slack-harvest-batch` 매일 04:00 등록
+
 ### 배치 작업 로그 파일 (`HARVEST_LOG_FILE`)
 - `HARVEST_LOG_FILE` 환경변수로 로그 파일 경로 지정 시 각 커맨드 완료 후 한 줄 append
 - fetch: 채널 수 / 메시지 수 / 스레드 수 / API 호출 횟수 기록
