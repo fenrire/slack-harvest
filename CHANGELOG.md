@@ -2,6 +2,13 @@
 
 ## 2026-04-08
 
+### 수집 채널 설정파일 관리 (`channels.txt`)
+- `channels.txt` 도입: 수집 대상 채널을 명시적으로 파일에서 관리. `fetch --all`이 워크스페이스 전체 채널을 수집하던 버그 수정
+- `fetch --all` 실행 전 대상 채널 목록을 출력하고 확인 프롬프트 표시 (`-y`로 스킵 가능, 배치 스크립트용)
+- `channels --save`: 기존 수집 이력 채널을 `channels.txt`에 저장하는 마이그레이션 커맨드
+- `HARVEST_CHANNELS_FILE` 환경변수로 파일 경로 변경 가능 (기본: `./channels.txt`)
+- ops.log 포맷 수정: `[fetch]` → `[slack-harvest/fetch]` (프로젝트 접두사 추가)
+
 ### 일일 배치 자동화 (Windows 작업 스케줄러)
 - `slack-harvest fetch --all` 플래그 추가: DB에 등록된 모든 채널을 한 번에 수집
 - `scripts/batch.bat`: fetch --all → summarize --llm → export 순서로 실행하는 배치 스크립트

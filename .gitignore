@@ -7,6 +7,9 @@ dist/
 data/
 /export/
 
+# 수집 채널 설정 (환경별)
+channels.txt
+
 # 로컬 작업 파일
 batches/
 pending.json

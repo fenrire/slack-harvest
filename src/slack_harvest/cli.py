@@ -103,12 +103,13 @@ def main(verbose: bool):
 
 @main.command()
 @click.option("--channel", "-c", multiple=True, help="채널 이름 또는 ID (여러 개 가능)")
-@click.option("--all", "fetch_all", is_flag=True, help="DB에 등록된 모든 채널 수집")
+@click.option("--all", "fetch_all", is_flag=True, help="channels.txt에 등록된 모든 채널 수집")
 @click.option("--thread", "-t", help="스레드 URL")
 @click.option("--since", help="시작 날짜 (YYYY-MM-DD) 또는 ts")
 @click.option("--full", is_flag=True, help="전체 히스토리 수집 (증분 무시)")
 @click.option("--refresh-days", "-r", type=int, default=0,
               help="최근 N일 메시지를 재수집하여 수정 감지 (기본: 0=비활성)")
+@click.option("--yes", "-y", is_flag=True, help="확인 프롬프트 없이 바로 실행 (배치용)")
 def fetch(
     channel: tuple[str, ...],
     fetch_all: bool,
@@ -116,6 +117,7 @@ def fetch(
     since: str | None,
     full: bool,
     refresh_days: int,
+    yes: bool,
 ):
     """채널 또는 스레드 메시지를 수집합니다."""
     config, client, repo = _setup()
@@ -126,12 +128,24 @@ def fetch(
     # 채널 목록 동기화
     _sync_channels(client, repo)
 
-    # --all: DB에 등록된 모든 채널로 확장
+    # --all: channels.txt에서 수집 대상 채널 목록을 읽음
     if fetch_all:
-        channel = tuple(ch["name"] for ch in repo.list_channels())
-        if not channel:
-            console.print("[yellow]수집된 채널이 없습니다.[/yellow]")
+        ch_list = config.load_channels()
+        if not ch_list:
+            if not config.channels_file.exists():
+                console.print(f"[red]채널 설정파일이 없습니다: {config.channels_file}[/red]")
+                console.print("[dim]'slack-harvest channels --save'로 현재 수집 채널을 파일에 저장하세요.[/dim]")
+            else:
+                console.print(f"[yellow]{config.channels_file}에 채널이 없습니다.[/yellow]")
             return
+        console.print(f"\n[bold]수집 대상 채널 ({len(ch_list)}개):[/bold]")
+        for name in ch_list:
+            console.print(f"  #{name}")
+        if not yes:
+            if not click.confirm("\n수집을 시작할까요?", default=True):
+                console.print("[dim]취소됨[/dim]")
+                return
+        channel = tuple(ch_list)
 
     total_msgs = total_threads = 0
 
@@ -172,7 +186,7 @@ def fetch(
 
     console.print(f"\n[green]수집 완료![/green] (API 호출 {client.api_calls}회)")
     _append_log(config,
-        f"[fetch] 채널 {len(channel)}개 / 메시지 {total_msgs}개 / "
+        f"[slack-harvest/fetch] 채널 {len(channel)}개 / 메시지 {total_msgs}개 / "
         f"스레드 {total_threads}개 / API {client.api_calls}회")
 
 
@@ -290,9 +304,23 @@ def _fetch_thread(
 
 @main.command()
 @click.option("--private/--no-private", default=True, help="Private 채널 포함 (기본: 포함)")
-def channels(private: bool):
+@click.option("--save", is_flag=True, help="수집 이력 있는 채널을 channels.txt에 저장")
+def channels(private: bool, save: bool):
     """Slack API에서 접근 가능한 채널 목록을 조회합니다."""
     config, client, repo = _setup()
+
+    if save:
+        collected = [
+            ch["name"] for ch in repo.list_channels() if ch.get("latest_ts")
+        ]
+        if not collected:
+            console.print("[yellow]수집 이력이 있는 채널이 없습니다.[/yellow]")
+            return
+        lines = ["# slack-harvest 수집 대상 채널", "# 한 줄에 채널 이름 하나, #으로 주석/비활성화", ""]
+        lines.extend(sorted(collected))
+        config.channels_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        console.print(f"[green]{len(collected)}개 채널 → {config.channels_file} 저장 완료[/green]")
+        return
 
     ch_list = client.list_channels(include_private=private)
 
@@ -363,7 +391,7 @@ def export(channel: str | None, nexus: bool):
     if count:
         console.print(f"  파일 {count}개 다운로드 완료")
 
-    _append_log(config, f"[export] Markdown 완료 / 파일 {count}개 다운로드")
+    _append_log(config, f"[slack-harvest/export] Markdown 완료 / 파일 {count}개 다운로드")
 
     # NexusEvent JSONL
     if nexus and config.nexus_outbox:
@@ -442,7 +470,7 @@ def summarize(channel: str | None, export_path: str | None, import_path: str | N
                 progress.advance(task)
                 progress.update(task, description=f"요약 중... ({ok}완료 {fail}실패)")
         console.print(f"[green]완료: {ok}개 저장, {fail}개 실패[/green]")
-        _append_log(config, f"[summarize] {ok}개 저장 {fail}개 실패 (gemini, min_replies={min_replies})")
+        _append_log(config, f"[slack-harvest/summarize] {ok}개 저장 {fail}개 실패 (gemini, min_replies={min_replies})")
         return
 
     pending = repo.get_unsummarized_threads(channel_id)

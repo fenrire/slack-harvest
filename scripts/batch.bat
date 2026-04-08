@@ -7,7 +7,7 @@ set PYTHONUTF8=1
 cd /d "C:\Users\Jungholee_pc\Documents\Projects\slack-harvest"
 
 echo [%DATE% %TIME%] 배치 시작
-slack-harvest fetch --all
+slack-harvest fetch --all -y
 slack-harvest summarize --llm
 slack-harvest export
 
