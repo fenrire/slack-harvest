@@ -9,6 +9,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _from_cm(service: str, username: str, env_var: str) -> str:
+    """Windows CM(keyring) 우선, 없으면 env var fallback."""
+    if service and username:
+        try:
+            import keyring
+            val = keyring.get_password(service, username)
+            if val:
+                return val
+        except Exception:
+            pass
+    return os.getenv(env_var, "")
+
+
 @dataclass
 class Config:
     slack_token: str = ""
@@ -21,7 +34,11 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
-        token = os.getenv("SLACK_TOKEN", "")
+        token = _from_cm(
+            os.getenv("SLACK_CM_SERVICE", ""),
+            os.getenv("SLACK_CM_USERNAME", ""),
+            "SLACK_TOKEN",
+        )
         output_dir = Path(os.getenv(
             "HARVEST_OUTPUT_DIR",
             str(Path.home() / "Documents" / "SlackArchive"),
@@ -33,7 +50,11 @@ class Config:
             slack_token=token,
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
-            gemini_api_key=os.getenv("GEMINI_API_KEY", ""),
+            gemini_api_key=_from_cm(
+                os.getenv("GEMINI_CM_SERVICE", ""),
+                os.getenv("GEMINI_CM_USERNAME", ""),
+                "GEMINI_API_KEY",
+            ),
             log_file=Path(log_raw).expanduser() if log_raw else None,
             channels_file=Path(channels_raw),
         )

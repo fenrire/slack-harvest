@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-04-14 (세션 2)
+
+### 채널 정리
+- `aks-release`, `ai-champion-lounge`, `ai-champion-main`, `alert-*` (22개) channels.txt 주석 처리 확인 및 export 파일 삭제
+
+### QMD MCP 서버 연동 수정
+- Claude Code 플러그인 환경에서 QMD MCP 서버가 인덱스를 찾지 못하는 문제 원인 파악 (`enableProductionMode()` 미호출로 `getDefaultDbPath()` 실패)
+- `marketplace.json`에 `INDEX_PATH` 환경변수 추가로 해결
+- 업스트림 버그 PR 제출: https://github.com/tobi/qmd/pull/53
+
+### QMD 컬렉션 context 설정
+- wiki, confluence, slack, vault, gitbook 5개 컬렉션에 context 설명 추가 (검색 품질 향상)
+
+### CLAUDE.md 지식 검색 순위 업데이트
+- 1순위: `wiki` → `wiki` + `vault` (큐레이션된 경험 추가)
+
+### 크레덴셜 식별자 설정파일 이관
+- `config.py`에 하드코딩된 keyring service/username 식별자를 `.env`로 이관
+- `SLACK_CM_SERVICE`, `SLACK_CM_USERNAME`, `GEMINI_CM_SERVICE`, `GEMINI_CM_USERNAME` 환경변수로 관리
+- 전역 CLAUDE.md 크레덴셜 정책("식별자도 코드에 하드코딩하지 않는다") 준수
+
+## 2026-04-14
+
+### 크레덴셜 KeePassXC 이관 + WCM 배치 지원
+
+- `.env`의 `SLACK_TOKEN`, `GEMINI_API_KEY` 평문 값 제거, CM 참조 주석으로 교체
+- 시크릿은 KeePassXC vault(`slack/user-token`, `google/gemini-api-key`)로 이관
+- PowerShell `Load-Secrets`에서 KeePassXC 읽기 후 Windows CM에도 자동 sync — 배치 무인 실행 가능
+- `config.py`: `_from_cm()` 헬퍼 추가, Windows CM(keyring) 우선 → env var fallback 순서로 크레덴셜 로드
+
 ## 2026-04-08
 
 ### 수집 채널 설정파일 관리 (`channels.txt`)
