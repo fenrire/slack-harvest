@@ -4,7 +4,7 @@
 
 setlocal
 set PYTHONUTF8=1
-cd /d "C:\Users\Jungholee_pc\Documents\Projects\slack-harvest"
+cd /d "%~dp0.."
 
 echo [%DATE% %TIME%] 배치 시작
 slack-harvest fetch --all -y
