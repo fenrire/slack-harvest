@@ -24,17 +24,30 @@ def _load_yaml_config() -> dict:
 _YAML = _load_yaml_config()
 
 
-def _from_cm(keyring_service: str, key: str, env_var: str) -> str:
-    """Windows CM(keyring) 우선, 없으면 env var fallback."""
-    if keyring_service and key:
+def get_credential(service: str, key: str) -> str:
+    """keyring(WCM) → env_var → 빈 문자열 순으로 크레덴셜 조회."""
+    svc = _YAML.get("credentials", {}).get(service, {})
+
+    # 1. keyring (WCM)
+    keyring_service = svc.get("keyring_service")
+    wcm_key = svc.get("keys", {}).get(key)
+    if keyring_service and wcm_key:
         try:
             import keyring
-            val = keyring.get_password(keyring_service, key)
+            val = keyring.get_password(keyring_service, wcm_key)
             if val:
                 return val
         except Exception:
             pass
-    return os.getenv(env_var, "")
+
+    # 2. env_var 폴백
+    env_var = svc.get("env_vars", {}).get(key)
+    if env_var:
+        val = os.environ.get(env_var)
+        if val:
+            return val
+
+    return ""
 
 
 @dataclass
@@ -49,15 +62,6 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
-        creds = _YAML.get("credentials", {})
-        slack_cred = creds.get("slack", {})
-        gemini_cred = creds.get("gemini", {})
-
-        token = _from_cm(
-            slack_cred.get("keyring_service", ""),
-            slack_cred.get("key", ""),
-            "SLACK_TOKEN",
-        )
         output_dir = Path(os.getenv(
             "HARVEST_OUTPUT_DIR",
             str(Path.home() / "Documents" / "SlackArchive"),
@@ -66,14 +70,10 @@ class Config:
         log_raw = os.getenv("HARVEST_LOG_FILE")
         channels_raw = os.getenv("HARVEST_CHANNELS_FILE", "channels.txt")
         return cls(
-            slack_token=token,
+            slack_token=get_credential("slack", "token"),
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
-            gemini_api_key=_from_cm(
-                gemini_cred.get("keyring_service", ""),
-                gemini_cred.get("key", ""),
-                "GEMINI_API_KEY",
-            ),
+            gemini_api_key=get_credential("gemini", "api_key"),
             log_file=Path(log_raw).expanduser() if log_raw else None,
             channels_file=Path(channels_raw),
         )

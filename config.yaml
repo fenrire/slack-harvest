@@ -4,7 +4,14 @@
 credentials:
   slack:
     keyring_service: "claude-code:slack"
-    key: "user-token"
+    keys:
+      token: "user-token"         # KeePassXC slack/user-token → Password
+    env_vars:
+      token: "SLACK_TOKEN"
+
   gemini:
     keyring_service: "claude-code:google-ai-studio"
-    key: "gemini"
+    keys:
+      api_key: "gemini"           # KeePassXC google/gemini-api-key → Password
+    env_vars:
+      api_key: "GEMINI_API_KEY"
