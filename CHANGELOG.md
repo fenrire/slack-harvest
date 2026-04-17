@@ -2,6 +2,10 @@
 
 ## 2026-04-17
 
+### README 재작성 + 아키텍처 문서 분리
+- README: Notion 연동 설명 → SQLite 로컬 아카이빙 기반으로 전면 재작성
+- `docs/architecture.md` 신규 추가: 데이터 흐름 Mermaid, 멱등성 설계, 프로젝트 구조
+
 ### config.yaml WCM 식별자 현황 문서 동기화
 - `claude-code:google-ai-studio` → `claude-code:google`, key `gemini` → `gemini-api-key` (현황 문서 실제 WCM 항목 기준)
 - `SLACK_USER_TOKEN` → `SLACK_TOKEN`, `GEMINI_API_KEY` → `GOOGLE_GEMINI_API_KEY` (현황 문서 env var 명칭 기준)
