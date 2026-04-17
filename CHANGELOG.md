@@ -2,6 +2,11 @@
 
 ## 2026-04-17
 
+### config.yaml WCM 식별자 현황 문서 동기화
+- `claude-code:google-ai-studio` → `claude-code:google`, key `gemini` → `gemini-api-key` (현황 문서 실제 WCM 항목 기준)
+- `SLACK_USER_TOKEN` → `SLACK_TOKEN`, `GEMINI_API_KEY` → `GOOGLE_GEMINI_API_KEY` (현황 문서 env var 명칭 기준)
+- `config.yaml`, `.env.example`, `CLAUDE.md` 일괄 수정
+
 ### config.yaml 도입: WCM 크레덴셜 식별자 관리
 - `config.yaml` 추가 (git 커밋됨): WCM Service/key 식별자를 코드 밖에서 선언
 - `config.py`: `.env` 환경변수 대신 `config.yaml`에서 keyring_service/key 읽음

@@ -95,7 +95,7 @@ WCM 식별자: `config.yaml`의 `credentials` 섹션에 선언 (git 커밋됨, �
 | 용도 | config.yaml 키 | KeePassXC 항목 | WCM Service / Key |
 |------|----------------|----------------|-------------------|
 | Slack User Token | `credentials.slack` | `slack/user-token` | `claude-code:slack` / `user-token` |
-| Gemini API Key | `credentials.gemini` | `google/gemini-api-key` | `claude-code:google-ai-studio` / `gemini` |
+| Gemini API Key | `credentials.gemini` | `google/gemini-api-key` | `claude-code:google` / `gemini-api-key` |
 
 ## Slack API 토큰
 
@@ -105,7 +105,7 @@ WCM 식별자: `config.yaml`의 `credentials` 섹션에 선언 (git 커밋됨, �
 ## 컨벤션
 
 - CLI 명령: `slack-harvest fetch`, `slack-harvest export`, `slack-harvest sync-users`, `slack-harvest list`
-- 환경변수: `SLACK_USER_TOKEN`, `GEMINI_API_KEY`(선택), `HARVEST_OUTPUT_DIR`, `NEXUS_OUTBOX_DIR`(선택), `HARVEST_CHANNELS_FILE`(기본: `channels.txt`)
+- 환경변수: `SLACK_TOKEN`, `GOOGLE_GEMINI_API_KEY`(선택), `HARVEST_OUTPUT_DIR`, `NEXUS_OUTBOX_DIR`(선택), `HARVEST_CHANNELS_FILE`(기본: `channels.txt`)
 - 채널 설정: `channels.txt`에 수집 대상 채널을 명시적으로 관리. `fetch --all`은 이 파일 기반. `channels --save`로 기존 수집 채널을 파일에 저장
 - 모든 텍스트 출력: 한국어
 - 커밋 메시지: 한국어 가능
