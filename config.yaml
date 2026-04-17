@@ -7,7 +7,7 @@ credentials:
     keys:
       token: "user-token"         # KeePassXC slack/user-token → Password
     env_vars:
-      token: "SLACK_TOKEN"
+      token: "SLACK_USER_TOKEN"
 
   gemini:
     keyring_service: "claude-code:google"
