@@ -1,0 +1,10 @@
+# WCM(Windows Credential Manager) 크레덴셜 식별자
+# 실제 시크릿은 KeePassXC → Load-Secrets → WCM에 저장됨
+# 이 파일은 시크릿 값을 포함하지 않으므로 git에 커밋 가능
+credentials:
+  slack:
+    keyring_service: "claude-code:slack"
+    key: "user-token"
+  gemini:
+    keyring_service: "claude-code:google-ai-studio"
+    key: "gemini"

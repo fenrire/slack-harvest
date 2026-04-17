@@ -1,4 +1,6 @@
 .env
+.env.*
+*.kdbx
 __pycache__/
 *.pyc
 .venv/

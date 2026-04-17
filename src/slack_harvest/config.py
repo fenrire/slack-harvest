@@ -9,12 +9,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def _from_cm(service: str, username: str, env_var: str) -> str:
+def _load_yaml_config() -> dict:
+    """프로젝트 루트의 config.yaml을 로드. 없으면 빈 딕트."""
+    path = Path(os.getenv("HARVEST_CONFIG_FILE", "config.yaml"))
+    if path.exists():
+        try:
+            import yaml
+            return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            pass
+    return {}
+
+
+_YAML = _load_yaml_config()
+
+
+def _from_cm(keyring_service: str, key: str, env_var: str) -> str:
     """Windows CM(keyring) 우선, 없으면 env var fallback."""
-    if service and username:
+    if keyring_service and key:
         try:
             import keyring
-            val = keyring.get_password(service, username)
+            val = keyring.get_password(keyring_service, key)
             if val:
                 return val
         except Exception:
@@ -34,9 +49,13 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
+        creds = _YAML.get("credentials", {})
+        slack_cred = creds.get("slack", {})
+        gemini_cred = creds.get("gemini", {})
+
         token = _from_cm(
-            os.getenv("SLACK_CM_SERVICE", ""),
-            os.getenv("SLACK_CM_USERNAME", ""),
+            slack_cred.get("keyring_service", ""),
+            slack_cred.get("key", ""),
             "SLACK_TOKEN",
         )
         output_dir = Path(os.getenv(
@@ -51,8 +70,8 @@ class Config:
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
             gemini_api_key=_from_cm(
-                os.getenv("GEMINI_CM_SERVICE", ""),
-                os.getenv("GEMINI_CM_USERNAME", ""),
+                gemini_cred.get("keyring_service", ""),
+                gemini_cred.get("key", ""),
                 "GEMINI_API_KEY",
             ),
             log_file=Path(log_raw).expanduser() if log_raw else None,

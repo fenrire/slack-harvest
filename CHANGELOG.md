@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-04-17
+
+### config.yaml 도입: WCM 크레덴셜 식별자 관리
+- `config.yaml` 추가 (git 커밋됨): WCM Service/key 식별자를 코드 밖에서 선언
+- `config.py`: `.env` 환경변수 대신 `config.yaml`에서 keyring_service/key 읽음
+- `.env`에서 `SLACK_CM_SERVICE` 등 CM 식별자 변수 제거 → config.yaml로 이관
+- `pyproject.toml`에 `pyyaml>=6.0` 의존성 추가
+- `.gitignore`에 `*.kdbx`, `.env.*` 추가 (시크릿 관리 가이드 섹션 7 준수)
+- `CLAUDE.md`에 크레덴셜 표 추가 (가이드 섹션 3 준수)
+- 팀원이 클론 후 WCM 구조를 별도 설정 없이 바로 파악 가능
+
 ## 2026-04-16
 
 ### 채널 이름 변경 추적 (`former_name`)

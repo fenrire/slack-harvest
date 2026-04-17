@@ -87,6 +87,16 @@ src/
 - 증분 수집: `channels.latest_ts` 기준으로 `oldest` 파라미터 설정
 - 동일 배치 재실행 시 결과 동일 보장
 
+## 크레덴셜
+
+시크릿 로드: `Load-Secrets` 실행 (KeePassXC → WCM 동기화)
+WCM 식별자: `config.yaml`의 `credentials` 섹션에 선언 (git 커밋됨, 시크릿 아님)
+
+| 용도 | config.yaml 키 | KeePassXC 항목 | WCM Service / Key |
+|------|----------------|----------------|-------------------|
+| Slack User Token | `credentials.slack` | `slack/user-token` | `claude-code:slack` / `user-token` |
+| Gemini API Key | `credentials.gemini` | `google/gemini-api-key` | `claude-code:google-ai-studio` / `gemini` |
+
 ## Slack API 토큰
 
 - User Token (xoxp-) 사용
