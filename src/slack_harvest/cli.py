@@ -164,6 +164,9 @@ def fetch(
             if not ch:
                 console.print(f"[red]채널 '{ch_name}'을 찾을 수 없습니다.[/red]")
                 continue
+            # 이름이 바뀐 경우 알림
+            if ch["name"] != ch_name and ch.get("former_name") == ch_name:
+                console.print(f"[yellow]  ※ '{ch_name}' → '{ch['name']}'으로 이름이 변경됨[/yellow]")
             if full:
                 oldest = None
             elif since:

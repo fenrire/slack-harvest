@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS schema_info (
 CREATE TABLE IF NOT EXISTS channels (
     id           TEXT PRIMARY KEY,
     name         TEXT NOT NULL,
+    former_name  TEXT DEFAULT '',
     topic        TEXT DEFAULT '',
     purpose      TEXT DEFAULT '',
     is_private   INTEGER DEFAULT 0,
@@ -104,5 +105,9 @@ def init_db(db_path: Path) -> sqlite3.Connection:
         "INSERT OR IGNORE INTO schema_info (version) VALUES (?)",
         (SCHEMA_VERSION,),
     )
+    # 기존 DB에 누락된 컬럼 마이그레이션
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(channels)")}
+    if "former_name" not in existing:
+        conn.execute("ALTER TABLE channels ADD COLUMN former_name TEXT DEFAULT ''")
     conn.commit()
     return conn

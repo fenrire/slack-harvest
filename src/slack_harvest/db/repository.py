@@ -14,15 +14,26 @@ class Repository:
     # ── channels ──────────────────────────────────────────────
 
     def upsert_channel(self, ch: dict) -> None:
+        new_name = ch.get("name", "")
+        # 이름 변경 감지: 기존 name이 다르면 former_name에 보존
+        existing = self.conn.execute(
+            "SELECT name, former_name FROM channels WHERE id = ?", (ch["id"],)
+        ).fetchone()
+        if existing and existing["name"] != new_name:
+            former = existing["name"]
+        else:
+            former = existing["former_name"] if existing else ""
+
         self.conn.execute(
             """INSERT OR REPLACE INTO channels
-               (id, name, topic, purpose, is_private, is_archived,
+               (id, name, former_name, topic, purpose, is_private, is_archived,
                 member_count, raw_json, fetched_at, latest_ts)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                         COALESCE((SELECT latest_ts FROM channels WHERE id = ?), NULL))""",
             (
                 ch["id"],
-                ch.get("name", ""),
+                new_name,
+                former,
                 (ch.get("topic") or {}).get("value", ""),
                 (ch.get("purpose") or {}).get("value", ""),
                 int(ch.get("is_private", False)),
@@ -162,7 +173,7 @@ class Repository:
 
     def get_channel_by_name(self, name: str) -> dict | None:
         row = self.conn.execute(
-            "SELECT * FROM channels WHERE name = ?", (name,)
+            "SELECT * FROM channels WHERE name = ? OR former_name = ?", (name, name)
         ).fetchone()
         return dict(row) if row else None
 

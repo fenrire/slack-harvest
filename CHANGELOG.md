@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-16
+
+### 채널 이름 변경 추적 (`former_name`)
+- `channels` 테이블에 `former_name TEXT DEFAULT ''` 컬럼 추가 (기존 DB 자동 마이그레이션)
+- `upsert_channel`: 채널 이름 변경 감지 시 기존 이름을 `former_name`으로 보존
+- `get_channel_by_name`: `name` 또는 `former_name` 양쪽 검색 → `channels.txt` 변경 없이 수집 이어짐
+- fetch 시 구 이름으로 찾힌 경우 이름 변경 경고 출력
+- `ly-gl-tech` → `ly-gl-main` 이름 변경 건 DB 수동 반영 + `channels.txt` 업데이트
+
 ## 2026-04-14 (세션 2)
 
 ### 채널 정리
