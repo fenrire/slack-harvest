@@ -109,6 +109,8 @@ def main(verbose: bool):
 @click.option("--full", is_flag=True, help="전체 히스토리 수집 (증분 무시)")
 @click.option("--refresh-days", "-r", type=int, default=0,
               help="최근 N일 메시지를 재수집하여 수정 감지 (기본: 0=비활성)")
+@click.option("--initial-days", type=int, default=90,
+              help="첫 수집 채널의 기본 윈도우 (일). 0=전체 수집 (기본: 90)")
 @click.option("--yes", "-y", is_flag=True, help="확인 프롬프트 없이 바로 실행 (배치용)")
 def fetch(
     channel: tuple[str, ...],
@@ -117,6 +119,7 @@ def fetch(
     since: str | None,
     full: bool,
     refresh_days: int,
+    initial_days: int,
     yes: bool,
 ):
     """채널 또는 스레드 메시지를 수집합니다."""
@@ -175,6 +178,12 @@ def fetch(
                 oldest = _days_ago_ts(refresh_days)
             else:
                 oldest = repo.get_latest_ts(ch["id"])
+                if oldest is None and initial_days > 0:
+                    oldest = _days_ago_ts(initial_days)
+                    console.print(
+                        f"  [yellow]첫 수집 — 최근 {initial_days}일만 가져옵니다"
+                        f" (전체: --full)[/yellow]"
+                    )
             m, t = _fetch_channel(client, repo, ch["id"], ch["name"], oldest,
                                    detect_edits=(refresh_days > 0))
             total_msgs += m

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-06-04
+
+### 첫 수집 채널 기본 윈도우 (`--initial-days`)
+- `fetch` 명령에 `--initial-days N` 옵션 추가 (기본: 90일)
+- `latest_ts=NULL`인 채널 첫 수집 시 전체 히스토리 대신 최근 N일만 가져옴
+- 전체 수집이 필요하면 `--full` 명시 필요
+- 배치(`fetch --all -y`) 실행 시 신규 채널의 수천 건 스레드 replies 호출 방지
+- 배경: 비공개→공개 전환 후 신규 추가된 채널이 전체 히스토리를 가져오며 배치 시간 폭증
+
+### issue-cloud5 채널 추가
+- `channels.txt`에 `issue-cloud5` 추가, 첫 수집+export 완료
+
 ## 2026-04-17
 
 ### README 재작성 + 아키텍처 문서 분리

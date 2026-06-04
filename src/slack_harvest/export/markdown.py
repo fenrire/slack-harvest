@@ -31,6 +31,12 @@ class MarkdownExporter:
 
     def export_channel(self, ch: dict) -> None:
         ch_dir = self.output_dir / "channels" / ch["name"]
+        # 채널명 변경 시 구 디렉토리 → 신 디렉토리 이전 (양쪽 다 있으면 무시)
+        former = ch.get("former_name", "")
+        if former and former != ch["name"]:
+            old_dir = self.output_dir / "channels" / former
+            if old_dir.exists() and not ch_dir.exists():
+                old_dir.rename(ch_dir)
         ch_dir.mkdir(parents=True, exist_ok=True)
 
         # LLM 요약 캐시 로드 (N+1 쿼리 방지)
