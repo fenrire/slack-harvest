@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-06-05
+
+### 워크스페이스 DB 머지 (`위메이드 퍼블리싱` → `위메이드`)
+- 워크스페이스 URL 변경(`wm-publ-dept.slack.com` → `wemade.slack.com`)으로 분리됐던 두 아카이브를 통합
+- 동일 워크스페이스 검증: 겹치는 유저 851명 이메일 불일치 0건으로 확인
+- `scripts/merge_workspace.py` 추가: ATTACH + `INSERT OR IGNORE` 합집합 머지 (PK 충돌 시 타겟 우선, 명시적 컬럼 지정으로 컬럼 순서 차이 대응, dry-run 기본/`--apply`로 실행, VACUUM 포함)
+- 이관 결과: messages +201,832(→471,910), channels +63(→758), thread_summaries +810(→12,557), users +8, files +8, sync_state +30. 소스 누락 0건·`integrity_check ok` 검증
+- 배경: CONTEXT의 "고유 채널만 이관(29개)" 가정과 달리, 겹치는 134개 채널에도 퍼블에만 있던 메시지 20만 건이 존재 → 고유 채널만 옮겼으면 대량 손실. 합집합 머지로 해결
+- 머지 전 백업 보존(`slack-harvest.db.bak-20260605`), 소스 폴더는 `_merged-위메이드퍼블리싱-20260605/`로 리네임(내부 `_db`→`_db.merged`로 워크스페이스 자동 인식에서 제외), 루트 빈 DB 삭제
+
+### export 대상을 channels.txt 기준으로 제한
+- `export_all(allowed_names)`: channels.txt 활성 채널(현재명/변경 전 이름)만 내보내도록 필터 추가
+- `cli.export`: 전체 export 시 `config.load_channels()`를 전달, 비어 있으면 전체 export로 폴백
+- 배경: 머지로 alert-*/ai-champion-* 등 의도적 제외 채널 30개가 DB에 유입됨. `export_all`이 DB 전체 기준이라 다음 배치에서 이들이 export로 되살아나는 문제 → `fetch --all`(channels.txt 기준)과 export 기준을 일치시켜 해결
+
 ## 2026-06-04
 
 ### 첫 수집 채널 기본 윈도우 (`--initial-days`)

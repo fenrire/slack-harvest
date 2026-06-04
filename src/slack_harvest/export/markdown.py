@@ -21,10 +21,20 @@ class MarkdownExporter:
         self.output_dir = output_dir
         self._workspace_url = repo.get_meta("workspace_url") or ""
 
-    def export_all(self) -> None:
-        """전체 export: 채널별 MD + 사용자 프로필."""
+    def export_all(self, allowed_names: set[str] | None = None) -> None:
+        """전체 export: 채널별 MD + 사용자 프로필.
+
+        allowed_names가 주어지면 해당 이름(현재명 또는 변경 전 이름)에
+        해당하는 채널만 내보낸다. None이면 DB의 모든 채널을 대상으로 한다.
+        (channels.txt로 수집 대상을 관리하므로, 배치 export 시 제외 채널이
+         되살아나지 않도록 cli에서 활성 채널 집합을 전달한다.)
+        """
         channels = self.repo.list_channels()
         for ch in channels:
+            if allowed_names is not None and not (
+                ch["name"] in allowed_names or ch.get("former_name", "") in allowed_names
+            ):
+                continue
             if self.repo.get_message_count(ch["id"]) > 0:
                 self.export_channel(ch)
         self._export_users()

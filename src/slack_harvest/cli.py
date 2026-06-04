@@ -393,7 +393,14 @@ def export(channel: str | None, nexus: bool):
             return
         exporter.export_channel(ch)
     else:
-        exporter.export_all()
+        # channels.txt 활성 채널만 export (제외 채널이 되살아나지 않도록).
+        # 파일이 없거나 비어 있으면 전체 export로 폴백.
+        active = config.load_channels()
+        if active:
+            exporter.export_all(allowed_names=set(active))
+        else:
+            console.print("[yellow]channels.txt가 비어 있어 DB 전체 채널을 내보냅니다.[/yellow]")
+            exporter.export_all()
 
     console.print("[green]Markdown 내보내기 완료![/green]")
 

@@ -1,22 +1,19 @@
-# CONTEXT — slack-harvest 첫 수집 윈도우 + DB 머지
-> 마지막 갱신: 2026-06-04
+# CONTEXT — slack-harvest 워크스페이스 머지 후속
+
+> 마지막 갱신: 2026-06-05
 
 ## 현재 상태
-- `--initial-days` 옵션 구현 완료 (기본 90일). `latest_ts=NULL`인 첫 수집 채널에 자동 적용
-- `issue-cloud5` 채널 추가 수집+export 완료
-- `위메이드` / `위메이드 퍼블리싱` 두 폴더 분석 완료 — workspace 이름 변경으로 인한 분리. 머지 대기 중
+- DB 머지 완료: `위메이드 퍼블리싱` → `위메이드` 통합 (합집합 머지, messages 471,910 / channels 758 / integrity_check ok)
+- export 기준을 channels.txt로 제한하는 수정 완료 (제외 채널 export 부활 방지)
+- 소스 폴더는 `_merged-위메이드퍼블리싱-20260605/`로 리네임, 내부 `_db`→`_db.merged`로 워크스페이스 자동 인식에서 제외
+- 머지 백업 보존: `위메이드/_db/slack-harvest.db.bak-20260605` (627MB)
 
 ## 다음 할 것
-- [ ] DB 머지: `위메이드 퍼블리싱` → `위메이드`로 통합
-  - 29개 고유 채널 (messages, files, channels) 이관
-  - 810개 고유 thread_summaries 이관
-  - 56개 겹치는 채널은 위메이드가 상위집합 — 별도 처리 불필요
-  - export 파일(channels/ 폴더)도 이관 필요
-  - 머지 후 `위메이드 퍼블리싱` 폴더 삭제 (또는 백업)
-- [ ] 변경사항 커밋 (`--initial-days`, `channels.txt` issue-cloud5 추가)
+- [ ] QMD slack 컬렉션 인덱스 갱신 (폴더 리네임 반영 + `_merged` 제외 확인) — 진행 중
+- [ ] 다음 04:00 배치 정상 동작 확인 후 백업(`*.bak-20260605`)과 `_merged-...` 폴더 삭제
+- [ ] (검토) workspace 고정 로직 — auth.test team명에 의존하면 이름 변경 시 또 폴더 분리됨. config로 workspace 고정 옵션 검토
 
 ## 미결·주의사항
-- `위메이드/slack-harvest.db` (루트에 0바이트 빈 파일) 존재 — 삭제 필요
-- `위메이드 퍼블리싱`의 workspace_url은 `wm-publ-dept.slack.com`, `위메이드`는 `wemade.slack.com` — 워크스페이스 이름 변경 시점에 auth.test 반환값이 바뀌어 폴더 분리 발생. 향후 재발 방지를 위해 workspace 고정 로직 검토 필요
-- 배치 스케줄이 `schtasks`에서 확인 안 됨 — 스크린샷에 보이는 실행은 다른 방식(수동 실행 또는 다른 스케줄러)일 수 있음
-- 퍼블리싱 DB(923MB)의 29개 고유 채널 중 `alert-ly-gl-game`만 127K 메시지 — 대부분 alert 채널이므로 channels.txt에서 주석처리된 상태인지 확인 필요
+- `export_all`은 기본 DB 전체 기준. cli에서 channels.txt 전달 시에만 필터됨 — `--channel` 개별 export는 무관
+- 배치 스케줄이 `schtasks`에서 확인 안 됨 — 실제 실행 방식(수동/다른 스케줄러) 미확정. batch.bat 주석은 "매일 04:00"
+- `_merged-...` 폴더에 과거 export(구 `wm-publ-dept` permalink) 잔존 — QMD 인덱싱 대상에서 제외할 것
