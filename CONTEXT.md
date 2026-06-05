@@ -8,11 +8,11 @@
 - 소스 폴더는 `~/Documents/_merged-위메이드퍼블리싱-20260605/`로 이동(SlackArchive 밖, QMD 인덱싱 제외), 내부 `_db`→`_db.merged`
 - 머지 백업 보존: `위메이드/_db/slack-harvest.db.bak-20260605` (627MB)
 - QMD slack 컬렉션 갱신 완료: 60,609 → 28,157 문서 (중복 134채널·구 permalink 31,569개 제거)
+- workspace 폴더명 고정 완료: `config.yaml: workspace=위메이드` (이름 변경 시 폴더 분리 재발 방지)
 
 ## 다음 할 것
 - [ ] 다음 04:00 배치 정상 동작 확인 후 백업(`*.bak-20260605`)과 `~/Documents/_merged-...` 폴더 삭제
 - [ ] 배치 후 QMD 신규 export 반영 + `qmd embed`(시맨틱 검색, 기존 백로그 2.9만 건 포함)
-- [ ] (검토) workspace 고정 로직 — auth.test team명에 의존하면 이름 변경 시 또 폴더 분리됨. config로 workspace 고정 옵션 검토
 
 ## 미결·주의사항
 - `export_all`은 기본 DB 전체 기준. cli에서 channels.txt 전달 시에만 필터됨 — `--channel` 개별 export는 무관

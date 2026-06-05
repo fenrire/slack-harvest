@@ -48,7 +48,16 @@ def _setup() -> tuple[Config, SlackClient, Repository]:
 
     client = SlackClient(config.slack_token)
     auth = client.auth_test()
-    config.workspace = auth.get("team", "unknown")
+    team = auth.get("team", "unknown")
+    if config.workspace:
+        # config.yaml 고정값 우선. team명이 바뀌어도 폴더가 갈라지지 않음.
+        if config.workspace != team:
+            console.print(
+                f"[yellow]Slack 워크스페이스 이름이 '{team}'으로 변경됨 "
+                f"— 폴더는 고정값 '{config.workspace}' 유지[/yellow]"
+            )
+    else:
+        config.workspace = team
     console.print(f"워크스페이스: [bold]{config.workspace}[/bold]")
 
     conn = init_db(config.db_path)
@@ -65,7 +74,13 @@ def _setup() -> tuple[Config, SlackClient, Repository]:
 def _setup_db_only() -> tuple[Config, Repository]:
     """DB만 필요한 명령용 초기화 (Slack API 연결 불필요)."""
     config = Config.from_env()
-    # workspace가 필요하므로 기존 DB 디렉토리에서 추론
+    # config.yaml 고정값이 있고 해당 폴더가 존재하면 그대로 사용
+    if config.workspace and (config.output_dir / config.workspace / "_db").exists():
+        conn = init_db(config.db_path)
+        repo = Repository(conn)
+        console.print(f"워크스페이스: [bold]{config.workspace}[/bold]")
+        return config, repo
+    # 미설정 시: 기존 DB 디렉토리에서 추론
     # output_dir 하위에 워크스페이스 디렉토리가 있는지 확인
     output = config.output_dir
     workspaces = [d for d in output.iterdir() if d.is_dir() and (d / "_db").exists()] if output.exists() else []

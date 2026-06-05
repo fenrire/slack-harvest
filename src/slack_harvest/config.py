@@ -71,6 +71,7 @@ class Config:
         channels_raw = os.getenv("HARVEST_CHANNELS_FILE", "channels.txt")
         return cls(
             slack_token=get_credential("slack", "token"),
+            workspace=_YAML.get("workspace", "") or "",
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
             gemini_api_key=get_credential("gemini", "api_key"),
