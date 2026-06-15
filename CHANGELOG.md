@@ -2,6 +2,12 @@
 
 ## 2026-06-15
 
+### `batch.bat` 무인 실행 보강 (daily-batch 편입 준비)
+- `slack-harvest` 직접 호출 → `uv run slack-harvest`로 변경. 명령이 venv 안에만 있고 PATH에 없어 무인 배치가 실패하던 문제(오늘 keyring과 같은 계열의 환경 누락)
+- 단계 실패 시 非0 종료코드 반환(`|| goto :fail` + `exit /b 1`). 기존엔 3명령 연쇄의 마지막(export) 기준이라 중간 실패가 가려졌음 → 중앙 오케스트레이터가 성공/실패를 정확히 판정 가능
+- `summarize --llm`은 Gemini 키 의존 부가(캐시성) 작업이라 best-effort(실패해도 fetch/export 진행)
+- 배경: 별도 레포 `daily-batch`(manifest 기반 중앙 오케스트레이터)가 매일 04:00 순차 실행으로 여러 프로젝트 일배치를 일원화. slack-harvest도 편입 대상이라 진입점의 종료코드 정직성을 보강
+
 ### `keyring` 의존성 누락 수정 + uv 락 완비
 - `pyproject.toml`에 `keyring>=24.0` 추가: `config.py`가 WCM(Windows Credential Manager)에서 Slack/Gemini 토큰을 읽을 때 `keyring`을 쓰는데도 의존성 선언이 없었음 → PC 포맷 후 새 uv venv에서 토큰 로드가 조용히 실패(`except Exception: pass`로 env 폴백 → `NO_TOKEN`)하던 버그. 포맷 전엔 우연히 설치돼 동작
 - `uv lock` 실행 → `uv.lock` 생성·커밋 (36개 패키지 잠금, 6/9 위임 TODO 해소)
