@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-06-15
+
+### `keyring` 의존성 누락 수정 + uv 락 완비
+- `pyproject.toml`에 `keyring>=24.0` 추가: `config.py`가 WCM(Windows Credential Manager)에서 Slack/Gemini 토큰을 읽을 때 `keyring`을 쓰는데도 의존성 선언이 없었음 → PC 포맷 후 새 uv venv에서 토큰 로드가 조용히 실패(`except Exception: pass`로 env 폴백 → `NO_TOKEN`)하던 버그. 포맷 전엔 우연히 설치돼 동작
+- `uv lock` 실행 → `uv.lock` 생성·커밋 (36개 패키지 잠금, 6/9 위임 TODO 해소)
+- `channels.txt`(.gitignore 대상)도 포맷으로 유실됨 → export된 채널 폴더 59개에서 복원 (커밋 대상 아님)
+
 ## 2026-06-05
 
 ### 워크스페이스 폴더명 고정 (`config.yaml: workspace`)
