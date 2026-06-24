@@ -166,6 +166,7 @@ def fetch(
         channel = tuple(ch_list)
 
     total_msgs = total_threads = 0
+    failed_channels: list[tuple[str, str]] = []
 
     if thread:
         # 단일 스레드 수집
@@ -181,6 +182,7 @@ def fetch(
             ch = repo.get_channel_by_name(ch_name) or repo.get_channel_by_id(ch_name)
             if not ch:
                 console.print(f"[red]채널 '{ch_name}'을 찾을 수 없습니다.[/red]")
+                failed_channels.append((ch_name, "DB에 없음"))
                 continue
             # 이름이 바뀐 경우 알림
             if ch["name"] != ch_name and ch.get("former_name") == ch_name:
@@ -199,10 +201,17 @@ def fetch(
                         f"  [yellow]첫 수집 — 최근 {initial_days}일만 가져옵니다"
                         f" (전체: --full)[/yellow]"
                     )
-            m, t = _fetch_channel(client, repo, ch["id"], ch["name"], oldest,
-                                   detect_edits=(refresh_days > 0))
-            total_msgs += m
-            total_threads += t
+            try:
+                m, t = _fetch_channel(client, repo, ch["id"], ch["name"], oldest,
+                                       detect_edits=(refresh_days > 0))
+                total_msgs += m
+                total_threads += t
+            except RuntimeError as e:
+                # 채널 단위 에러(channel_not_found, is_archived, not_in_channel 등)는
+                # 해당 채널만 건너뛰고 계속한다 — 한 채널 때문에 전체 배치가 죽지 않도록.
+                console.print(f"[red]  ✗ #{ch['name']} 수집 실패 — 건너뜀: {e}[/red]")
+                failed_channels.append((ch["name"], str(e)))
+                continue
     else:
         console.print("[yellow]--channel 또는 --thread 옵션을 지정하세요.[/yellow]")
         console.print("예: slack-harvest fetch -c general")
@@ -211,10 +220,18 @@ def fetch(
     # 누락 사용자 보충 (게스트, 외부 조직 등)
     _backfill_missing_users(client, repo)
 
+    if failed_channels:
+        console.print(f"\n[yellow]수집 실패 채널 {len(failed_channels)}개 (건너뜀):[/yellow]")
+        for name, err in failed_channels:
+            console.print(f"  [yellow]#{name}[/yellow] — {err}")
+        console.print(
+            "[dim]channel_not_found/is_archived 등은 채널이 삭제·아카이브됐을 수 있습니다. "
+            "channels.txt 정리를 검토하세요.[/dim]")
+
     console.print(f"\n[green]수집 완료![/green] (API 호출 {client.api_calls}회)")
     _append_log(config,
         f"[slack-harvest/fetch] 채널 {len(channel)}개 / 메시지 {total_msgs}개 / "
-        f"스레드 {total_threads}개 / API {client.api_calls}회")
+        f"스레드 {total_threads}개 / 실패 {len(failed_channels)}개 / API {client.api_calls}회")
 
 
 def _backfill_missing_users(client: SlackClient, repo: Repository) -> None:
