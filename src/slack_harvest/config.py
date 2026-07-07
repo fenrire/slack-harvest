@@ -56,7 +56,9 @@ class Config:
     workspace: str = ""  # auth.test에서 자동 채움
     output_dir: Path = field(default_factory=lambda: Path.home() / "Documents" / "SlackArchive")
     nexus_outbox: Path | None = None
-    gemini_api_key: str = ""
+    vertex_project: str = ""
+    vertex_location: str = "global"
+    vertex_model: str = "gemini-2.5-flash-lite"
     log_file: Path | None = None
     channels_file: Path = field(default_factory=lambda: Path("channels.txt"))
 
@@ -74,7 +76,9 @@ class Config:
             workspace=_YAML.get("workspace", "") or "",
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
-            gemini_api_key=get_credential("gemini", "api_key"),
+            vertex_project=_YAML.get("vertex", {}).get("project", "") or "",
+            vertex_location=_YAML.get("vertex", {}).get("location", "global") or "global",
+            vertex_model=_YAML.get("vertex", {}).get("model", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite",
             log_file=Path(log_raw).expanduser() if log_raw else None,
             channels_file=Path(channels_raw),
         )

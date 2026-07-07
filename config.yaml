@@ -15,9 +15,12 @@ credentials:
     env_vars:
       token: "SLACK_USER_TOKEN"
 
-  gemini:
-    keyring_service: "claude-code:google"
-    keys:
-      api_key: "gemini-api-key"   # KeePassXC google/gemini-api-key → Password
-    env_vars:
-      api_key: "GOOGLE_GEMINI_API_KEY"
+# Vertex AI Gemini (스레드 요약 LLM). Gemini API키 폐지(2026-07) → ADC 인증으로 전환.
+# 인증: gcloud auth application-default login (@wemade.com, 사내망 IP)
+#       + gcloud auth application-default set-quota-project <project>
+# ⚠ Context-Aware Access: 사내망 IP에서만 호출 통과 (비사내망 차단).
+# 모델 미가용 시 model 을 gemini-2.5-flash 로 교체.
+vertex:
+  project: "gemini-ent-483802"
+  location: "global"
+  model: "gemini-2.5-flash-lite"

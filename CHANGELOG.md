@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-07
+
+### LLM 요약: Gemini API키 → Vertex AI(google-genai + ADC) 이관
+- 사내 정책상 Gemini API키 폐지(2026-07)에 대응. `summarize/gemini.py`의 순수 REST(`?key=API_KEY`) 호출을 `google-genai` SDK + Vertex AI로 교체
+- `GeminiSummarizer(api_key)` → `GeminiSummarizer(project, location, model)`: `genai.Client(vertexai=True, ...)`로 ADC 인증. project/location/model은 `config.yaml`의 `vertex` 섹션에서 주입(하드코딩 제거)
+- `config.yaml`: 죽은 `credentials.gemini`(API키) 블록 제거 → `vertex`(project=`gemini-ent-483802`, location=`global`, model=`gemini-2.5-flash-lite`) 섹션 추가. `config.py`: `gemini_api_key` 필드 → `vertex_*` 3필드로 교체
+- `cli.py` `summarize --llm` 가드: API키 존재 확인 → `vertex.project` 설정 + `google.auth.default()`로 ADC 존재 확인. ADC 없으면 `gcloud auth application-default login` 안내. project 자동탐지 실패 시 나던 `google.auth._default` "No project ID" 경고는 요약 호출이 project를 명시하므로 무해 → 해당 로거 억제
+- 배경: keyring의 gemini API키가 이미 삭제돼 `summarize --llm`이 무동작 실패 상태였음. Vertex는 사내망 IP에서만 인증 통과(Context-Aware Access) — 비사내망 배치 시 summarize는 best-effort로 스킵됨
+- 검증: 사내망에서 실호출 확인 — `gemini-2.5-flash-lite` Vertex global 가용, ADC 인증 성공, 실제 스레드 요약 1건 DB 저장(HTTP 200) end-to-end 확인
+
+### Mac 일배치 진입점 `scripts/batch.sh` 추가
+- 메인 장비가 Mac으로 전환되며 `scheduled-tasks`(구 daily-batch) launchd 러너가 `scripts/batch.sh`(cwd=프로젝트 루트)를 호출하는데 Windows용 `batch.bat`만 있어 Mac 배치가 즉시 실패하던 문제 해소
+- `batch.bat`의 Mac 미러: `fetch --all -y`(실패→exit1) → `summarize --llm`(best-effort) → `export`(실패→exit1). 종료코드 정직성 유지(fetch/export 실패 시 non-0), 시크릿은 keyring(Mac=Keychain 백엔드) 자가 조달
+- 실행 권한 부여(`chmod +x`), 문법·경로해석 검증 완료
+
 ## 2026-06-24
 
 ### fetch 채널 단위 에러 격리 (배치 연속 실패 수정)

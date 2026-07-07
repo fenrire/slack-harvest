@@ -462,7 +462,7 @@ def export(channel: str | None, nexus: bool):
 @click.option("--channel", "-c", help="특정 채널만 대상")
 @click.option("--export", "export_path", type=click.Path(), help="미요약 스레드를 JSON으로 출력")
 @click.option("--import", "import_path", type=click.Path(exists=True), help="요약 JSON을 DB에 저장")
-@click.option("--llm", is_flag=True, help="Gemini API로 직접 요약 (GEMINI_API_KEY 필요)")
+@click.option("--llm", is_flag=True, help="Vertex AI Gemini로 직접 요약 (ADC 인증 필요, 사내망 IP)")
 @click.option("--min-replies", default=5, show_default=True, help="최소 답글 수 필터 (--llm 전용)")
 def summarize(channel: str | None, export_path: str | None, import_path: str | None, llm: bool, min_replies: int):
     """스레드 요약을 관리합니다 (LLM 요약 캐시)."""
@@ -494,8 +494,21 @@ def summarize(channel: str | None, export_path: str | None, import_path: str | N
 
     if llm:
         from .summarize.gemini import GeminiSummarizer
-        if not config.gemini_api_key:
-            console.print("[red]GEMINI_API_KEY가 설정되지 않았습니다.[/red]")
+        if not config.vertex_project:
+            console.print("[red]config.yaml의 vertex.project가 설정되지 않았습니다.[/red]")
+            return
+        try:
+            import logging as _logging
+            import google.auth
+            # ADC 존재 여부만 확인 — 프로젝트는 요약 호출 시 명시 전달하므로
+            # 여기서 나는 "No project ID" 경고는 무해한 노이즈라 억제한다.
+            _logging.getLogger("google.auth._default").setLevel(_logging.ERROR)
+            google.auth.default()
+        except Exception:
+            console.print(
+                "[red]Vertex ADC 인증이 없습니다.[/red] "
+                "'gcloud auth application-default login'(@wemade.com, 사내망 IP) 후 재시도하세요."
+            )
             return
         pending = repo.get_unsummarized_threads(channel_id)
         targets = [t for t in pending if (t["reply_count"] or 0) >= min_replies]
@@ -504,7 +517,11 @@ def summarize(channel: str | None, export_path: str | None, import_path: str | N
             console.print("[green]요약할 스레드가 없습니다.[/green]")
             return
 
-        summarizer = GeminiSummarizer(config.gemini_api_key)
+        summarizer = GeminiSummarizer(
+            project=config.vertex_project,
+            location=config.vertex_location,
+            model=config.vertex_model,
+        )
         ok = fail = 0
         with Progress(SpinnerColumn(), TextColumn("{task.description}"), console=console) as progress:
             task = progress.add_task("요약 중...", total=len(targets))
