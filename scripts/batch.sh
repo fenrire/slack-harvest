@@ -6,6 +6,8 @@
 # 시크릿: Slack 토큰은 keyring(Mac=Keychain 백엔드)에서 자가 조달, LLM 요약은 ADC.
 
 export PYTHONUTF8=1
+# 수집 통계(메시지 N건)를 항상 중앙 ops.log에 남긴다 — 0건 수집이 눈에 띄도록.
+export HARVEST_LOG_FILE="${HARVEST_LOG_FILE:-$HOME/Documents/ops.log}"
 cd "$(dirname "$0")/.." || exit 1
 
 ts() { date '+%Y-%m-%d %H:%M:%S'; }

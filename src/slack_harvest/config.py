@@ -70,17 +70,29 @@ class Config:
         ))
         nexus_raw = os.getenv("NEXUS_OUTBOX_DIR")
         log_raw = os.getenv("HARVEST_LOG_FILE")
-        channels_raw = os.getenv("HARVEST_CHANNELS_FILE", "channels.txt")
+        workspace = _YAML.get("workspace", "") or ""
+
+        # channels.txt 위치: (1) HARVEST_CHANNELS_FILE 명시 > (2) 아카이브(워크스페이스)
+        # 폴더 옆 > (3) cwd(back-compat). 아카이브 옆에 두면 DB와 함께 장비 이전을 타므로
+        # git에 커밋하지 않고도(내부 채널명 외부 유출 방지) 이전 시 유실되지 않는다.
+        channels_raw = os.getenv("HARVEST_CHANNELS_FILE")
+        if channels_raw:
+            channels_file = Path(channels_raw).expanduser()
+        elif workspace:
+            channels_file = output_dir / workspace / "channels.txt"
+        else:
+            channels_file = Path("channels.txt")
+
         return cls(
             slack_token=get_credential("slack", "token"),
-            workspace=_YAML.get("workspace", "") or "",
+            workspace=workspace,
             output_dir=output_dir,
             nexus_outbox=Path(nexus_raw) if nexus_raw else None,
             vertex_project=_YAML.get("vertex", {}).get("project", "") or "",
             vertex_location=_YAML.get("vertex", {}).get("location", "global") or "global",
             vertex_model=_YAML.get("vertex", {}).get("model", "gemini-2.5-flash-lite") or "gemini-2.5-flash-lite",
             log_file=Path(log_raw).expanduser() if log_raw else None,
-            channels_file=Path(channels_raw),
+            channels_file=channels_file,
         )
 
     def load_channels(self) -> list[str]:

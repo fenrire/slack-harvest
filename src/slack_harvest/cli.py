@@ -155,7 +155,10 @@ def fetch(
                 console.print("[dim]'slack-harvest channels --save'로 현재 수집 채널을 파일에 저장하세요.[/dim]")
             else:
                 console.print(f"[yellow]{config.channels_file}에 채널이 없습니다.[/yellow]")
-            return
+            # --all인데 수집 대상이 0개면 '조용한 성공'으로 위장되지 않도록 실패로 종료한다.
+            # (channels.txt 유실이 배치 exit 0으로 12일간 미탐지된 사고 방지)
+            _append_log(config, "[slack-harvest/fetch] 실패: channels.txt 없음/비어있음 (수집 0건)")
+            sys.exit(1)
         console.print(f"\n[bold]수집 대상 채널 ({len(ch_list)}개):[/bold]")
         for name in ch_list:
             console.print(f"  #{name}")
@@ -228,7 +231,9 @@ def fetch(
             "[dim]channel_not_found/is_archived 등은 채널이 삭제·아카이브됐을 수 있습니다. "
             "channels.txt 정리를 검토하세요.[/dim]")
 
-    console.print(f"\n[green]수집 완료![/green] (API 호출 {client.api_calls}회)")
+    console.print(
+        f"\n[green]수집 완료![/green] "
+        f"(메시지 {total_msgs}개 / 스레드 {total_threads}개 / API 호출 {client.api_calls}회)")
     _append_log(config,
         f"[slack-harvest/fetch] 채널 {len(channel)}개 / 메시지 {total_msgs}개 / "
         f"스레드 {total_threads}개 / 실패 {len(failed_channels)}개 / API {client.api_calls}회")

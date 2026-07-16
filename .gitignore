@@ -9,7 +9,8 @@ dist/
 data/
 /export/
 
-# 수집 채널 설정 (환경별)
+# 수집 채널 설정 — 이제 아카이브 폴더(SlackArchive/<workspace>/channels.txt)에 보관,
+# DB와 함께 장비 이전을 탄다. 아래는 구 위치(repo cwd) 잔존분이 커밋되지 않도록 유지.
 channels.txt
 
 # 로컬 작업 파일

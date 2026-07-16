@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-07-14
+
+### channels.txt 유실 재발 방지 (7/1~7/13 조용한 0건 수집 사고 대응)
+- **사고**: channels.txt가 Mac 전환(6/30) 때 유실 → `fetch --all`이 "채널 설정파일 없음" 출력 후 **exit 0**으로 종료(메시지 0건). daily-batch는 매일 `exit=0`이라 12일간 미탐지. 6/15 Windows 포맷 때와 같은 유형 재발(3회째). weekly-report 세션이 발견·복원·백필(7/14 08:37까지, 7/1 이후 3,883건). 리포트: mail `ce0bba66db33`
+- **① exit≠0**: `fetch --all`인데 채널 목록이 비면 `sys.exit(1)` + ops.log에 실패 라인. '수집 0건=성공' 위장 차단. 유실 시 배치가 즉시 FAIL
+- **② 아카이브 옆 보관**: channels.txt 기본 위치를 repo cwd → `SlackArchive/<workspace>/channels.txt`로 이동. DB(수동 이전 필수)와 같은 폴더라 장비 이전을 함께 탄다. git 커밋 안 함(내부 채널명 외부 유출 방지) + 유실 방지 양립. `HARVEST_CHANNELS_FILE`로 오버라이드 가능, 워크스페이스 미설정 시 cwd 폴백(back-compat)
+- **③ 수집 통계 상시 노출**: `fetch` 콘솔 완료 줄에 메시지/스레드 수 추가(기존 API 횟수만). batch.sh/batch.bat이 `HARVEST_LOG_FILE`(중앙 ops.log) 미설정 시 자동 설정 → 통계 라인 항상 기록, 0건이 눈에 띔
+- 검증: config가 아카이브 경로로 해석·59채널 로드 확인, 존재하지 않는 channels 경로 시 exit≠0 확인
+
 ## 2026-07-07
 
 ### LLM 요약: Gemini API키 → Vertex AI(google-genai + ADC) 이관

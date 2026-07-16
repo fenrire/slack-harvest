@@ -6,6 +6,8 @@
 
 setlocal
 set PYTHONUTF8=1
+:: 수집 통계(메시지 N건)를 항상 중앙 ops.log에 남긴다 — 0건 수집이 눈에 띄도록.
+if not defined HARVEST_LOG_FILE set "HARVEST_LOG_FILE=%USERPROFILE%\Documents\ops.log"
 cd /d "%~dp0.."
 
 echo [%DATE% %TIME%] batch start
