@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-20
+
+### channels.txt 큐레이션 검증 + 삭제 채널 제거 (7/14 복원 후속 TODO 2건 처리)
+- **큐레이션 검증**: 7/13 복원본(59채널)이 이전 수동 큐레이션과 일치함을 DB sync_state로 확인. 제외 상태였던 28개(alert-* 24, ai-champion-* 2, aks-release, kr-idc-migration)는 전부 마지막 수집이 4/8~4/14 — 4월에 의도적으로 뺀 채널들이며 복원본에 부활하지 않음. 누락도 없음(활성 59개 전부 포함, 7/20 배치까지 정상 수집)
+- **삭제 채널 제거**: `#게임사업본부x기술개발본부-pm논의방`(`C09T95XTWQY`)을 `conversations.info`로 확인 — `channel_not_found`(아카이브면 `is_archived=true`로 반환되므로 영구 삭제/접근권 상실). channels.txt에서 제거해 6/22부터 매 배치 나던 실패 경고 노이즈 해소. 검증 결과는 channels.txt 헤더 주석에도 기록
+
 ## 2026-07-14
 
 ### channels.txt 유실 재발 방지 (7/1~7/13 조용한 0건 수집 사고 대응)

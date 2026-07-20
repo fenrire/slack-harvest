@@ -95,7 +95,12 @@ WCM 식별자: `config.yaml`의 `credentials` 섹션에 선언 (git 커밋됨, �
 | 용도 | config.yaml 키 | KeePassXC 항목 | WCM Service / Key |
 |------|----------------|----------------|-------------------|
 | Slack User Token | `credentials.slack` | `slack/user-token` | `claude-code:slack` / `user-token` |
-| Gemini API Key | `credentials.gemini` | `google/gemini-api-key` | `claude-code:google` / `gemini-api-key` |
+
+### LLM 요약 (Vertex AI)
+
+- `summarize --llm`은 google-genai + Vertex AI(ADC 인증). API 키 없음 — project/location/model은 `config.yaml`의 `vertex` 섹션
+- **사내망 IP에서만 인증 통과**(Context-Aware Access). 비사내망 배치 시 summarize만 스킵(best-effort), fetch/export는 정상 진행
+- ADC 사전조건: `gcloud auth application-default login`(@wemade.com, 사내망) + quota project=`gemini-ent-483802`
 
 ## Slack API 토큰
 
@@ -105,7 +110,9 @@ WCM 식별자: `config.yaml`의 `credentials` 섹션에 선언 (git 커밋됨, �
 ## 컨벤션
 
 - CLI 명령: `slack-harvest fetch`, `slack-harvest export`, `slack-harvest sync-users`, `slack-harvest list`
-- 환경변수: `SLACK_USER_TOKEN`, `GOOGLE_GEMINI_API_KEY`(선택), `HARVEST_OUTPUT_DIR`, `NEXUS_OUTBOX_DIR`(선택), `HARVEST_CHANNELS_FILE`(기본: `channels.txt`)
+- 환경변수: `SLACK_USER_TOKEN`, `HARVEST_OUTPUT_DIR`, `NEXUS_OUTBOX_DIR`(선택), `HARVEST_CHANNELS_FILE`(기본: `SlackArchive/<workspace>/channels.txt`)
 - 채널 설정: `channels.txt`에 수집 대상 채널을 명시적으로 관리. `fetch --all`은 이 파일 기반. `channels --save`로 기존 수집 채널을 파일에 저장
+- **channels.txt 위치 = 아카이브 옆**(`SlackArchive/<workspace>/channels.txt`, repo cwd 아님). git 미커밋(내부 채널명 유출 방지) — 장비 이전 시 SlackArchive 폴더째 복사하면 DB와 함께 따라옴. 워크스페이스 미설정 시 cwd 폴백
+- export는 전체 재생성(멱등). qmd 재인덱싱은 content-hash 기준이라 내용 불변이면 발생 안 함
 - 모든 텍스트 출력: 한국어
 - 커밋 메시지: 한국어 가능
